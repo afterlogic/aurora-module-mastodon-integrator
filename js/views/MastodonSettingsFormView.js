@@ -5,6 +5,8 @@ var
 	$ = require('jquery'),
 	ko = require('knockout'),
 	
+	AddressUtils = require('%PathToCoreWebclientModule%/js/utils/Address.js'),
+	TextUtils = require('%PathToCoreWebclientModule%/js/utils/Text.js'),
 	Types = require('%PathToCoreWebclientModule%/js/utils/Types.js'),
 	UrlUtils = require('%PathToCoreWebclientModule%/js/utils/Url.js'),
 	
@@ -13,7 +15,11 @@ var
 	App = require('%PathToCoreWebclientModule%/js/App.js'),
 	ModulesManager = require('%PathToCoreWebclientModule%/js/ModulesManager.js'),
 	WindowOpener = require('%PathToCoreWebclientModule%/js/WindowOpener.js'),
-	
+	UserSettings = require('%PathToCoreWebclientModule%/js/Settings.js'),
+
+	Popups = require('%PathToCoreWebclientModule%/js/Popups.js'),
+	ConfirmPopup = require('%PathToCoreWebclientModule%/js/popups/ConfirmPopup.js'),
+
 	CAbstractSettingsFormView = ModulesManager.run('SettingsWebclient', 'getAbstractSettingsFormViewClass'),
 	
 	Settings = require('modules/%ModuleName%/js/Settings.js')
@@ -26,166 +32,77 @@ function CMastodonSettingsFormView()
 {
 	CAbstractSettingsFormView.call(this, Settings.ServerModuleName);
 	
-	this.connected = ko.observable(Settings.Connected);
-	this.scopes = ko.observable(Settings.getScopesCopy());
-	this.bRunCallback = false;
-	
-	window.mastodonConnectCallback = _.bind(function (bResult, sErrorCode, sModule) {
-		this.bRunCallback = true;
-		
-		if (!bResult)
-		{
-			Api.showErrorByCode({'ErrorCode': Types.pInt(sErrorCode), 'ErrorMessage': '', 'ErrorModule': sModule}, '', true);
-		}
-		else
-		{
-			this.connected(true);
-			this.updateSavedState();
-			Settings.updateScopes(this.connected(), this.scopes());
-		}
-	}, this);
+	this.accountExist = ko.observable(false);
+	this.emails = ko.observableArray([]);
+	this.selectedEmail = ko.observable('');
+	this.password = ko.observable('');
 }
 
 _.extendOwn(CMastodonSettingsFormView.prototype, CAbstractSettingsFormView.prototype);
 
 CMastodonSettingsFormView.prototype.ViewTemplate = '%ModuleName%_MastodonSettingsFormView';
 
-/**
- * Returns current values of changeable parameters. These values are used to compare with their previous version.
- * @returns {Array}
- */
-CMastodonSettingsFormView.prototype.getCurrentValues = function()
+CMastodonSettingsFormView.prototype.onShow = function ()
 {
-	var aScopesValues = _.map(this.scopes(), function (oScope) {
-		return oScope.Name + oScope.Value();
-	});
-	return [
-		this.connected(),
-		aScopesValues
-	];
+	this.accountExist(false);
+	this.emails(ModulesManager.run('MailWebclient', 'getAllAccountsFullEmails'));
+	this.selectedEmail('');
+	this.password('');
 };
 
-/**
- * Reverts values of changeable parameters to default ones.
- */
-CMastodonSettingsFormView.prototype.revertGlobalValues = function()
-{
-	this.connected(Settings.Connected);
-	this.scopes(Settings.getScopesCopy());
-};
-
-/**
- * Checks if connect is allowed and tries to connect in that case.
- */
-CMastodonSettingsFormView.prototype.checkAndConnect = function ()
+CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 {
 	var
-		oParams = {
-			'Scopes': [],
-			'Service': 'mastodon',
-			'AllowConnect': true
-		},
-		oAuthScope = _.find(this.scopes(), function (oScope) {
-			return oScope.Name === 'auth';
-		}),
-		bAuthOn = !!oAuthScope && !!oAuthScope.Value(),
-		oAuthGlobalScope = _.find(Settings.getScopesCopy(), function (oScope) {
-			return oScope.Name === 'auth';
-		}),
-		bGlobalAuthOn = !!oAuthGlobalScope && !!oAuthGlobalScope.Value()
+		oEmailParts = AddressUtils.getEmailParts(this.selectedEmail()),
+		sUsername = oEmailParts.name
 	;
-	
-	_.each(this.scopes(), function (oScope) {
-		if (oScope.Value())
-		{
-			oParams.Scopes.push(oScope.Name);
-		}
-	});
-	
-	App.broadcastEvent('OAuthAccountChange::before', oParams);
-	
-	if (oParams.AllowConnect && (bAuthOn || bAuthOn === bGlobalAuthOn || !bAuthOn && App.isAccountDeletingAvailable()))
+	if (!Types.isNonEmptyString(sUsername))
 	{
-		this.connect(oParams.Scopes);
+		sUsername = oEmailParts.email.split('@')[0];
 	}
-};
-
-/**
- * Tries to connect user to Mastodon account.
- * @param {array} aScopes
- */
-CMastodonSettingsFormView.prototype.connect = function (aScopes)
-{
-	$.removeCookie('oauth-scopes');
-	$.cookie('oauth-scopes', aScopes.join('|'));
-	$.cookie('oauth-redirect', 'connect');
-	this.bRunCallback = false;
-	var
-		oWin = WindowOpener.open(UrlUtils.getAppPath() + '?oauth=mastodon', 'Mastodon'),
-		iIntervalId = setInterval(_.bind(function() {
-			if (oWin.closed)
+	Ajax.send(
+		'%ModuleName%',
+		'RegisterMastodonAccount',
+		{
+			'Username': sUsername,
+			'Email': oEmailParts.email,
+			'Password': this.password(),
+			'Agreement': true,
+			'Locale': UserSettings.ShortLanguage
+		},
+		function (oResponse, oRequest) {
+			if (oResponse.Result)
 			{
-				clearInterval(iIntervalId);
-				if (!this.bRunCallback)
-				{
-					window.location.reload();
-				}
-				else
-				{
-					App.broadcastEvent('OAuthAccountChange::after');
-					this.updateSavedState();
-					Settings.updateScopes(this.connected(), this.scopes());
-				}
+				this.accountExist(true);
+				Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REGISTER_ACCOUNT'));
 			}
-		}, this), 1000)
-	;
-};
-
-/**
- * Checks if disconnect is allowed and disconnects in that case.
- */
-CMastodonSettingsFormView.prototype.checkAndDisconnect = function ()
-{
-	var
-		oParams = {
-			'Service': 'mastodon',
-			'AllowDisconnect': true
+			else
+			{
+				Api.showErrorByCode(oResponse, TextUtils.i18n('%MODULENAME%/ERROR_REGISTER_ACCOUNT'));
+			}
 		},
-		oAuthGlobalScope = _.find(Settings.getScopesCopy(), function (oScope) {
-			return oScope.Name === 'auth';
-		}),
-		bGlobalAuthOn = !!oAuthGlobalScope && !!oAuthGlobalScope.Value()
-	;
-	
-	App.broadcastEvent('OAuthAccountChange::before', oParams);
-	
-	if (oParams.AllowDisconnect && (!bGlobalAuthOn || App.isAccountDeletingAvailable()))
-	{
-		this.disconnect();
-	}
+		this
+	);
 };
 
-/**
- * Disconnects user from Mastodon account.
- */
-CMastodonSettingsFormView.prototype.disconnect = function ()
+CMastodonSettingsFormView.prototype.changeMastodonAccountPassword = function ()
 {
-	Ajax.send(Settings.ServerModuleName, 'DeleteAccount', null, function (oResponse) {
-		if (oResponse.Result)
-		{
-			this.connected(false);
-			_.each(this.scopes(), function (oScope) {
-				oScope.Value(false);
-			});
-			App.broadcastEvent('OAuthAccountChange::after');
-			this.updateSavedState();
-			Settings.updateScopes(this.connected(), this.scopes());
-		}
-		else
-		{
-			Api.showErrorByCode(oResponse, '', true);
-		}
-	}, this);
+	console.log('changeMastodonAccountPassword');
+};
+
+CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
+{
+	Popups.showPopup(ConfirmPopup, [TextUtils.i18n('%MODULENAME%/CONFIRM_REMOVE_ACCOUNT'), 
+		_.bind(function (bOk) {
+			if (bOk)
+			{
+				this.closeComposesWithDraftUids(aUids);
+				fMoveMessages();
+			}
+			this.disableComposeAutosave(false);
+		}, this), 
+		'', TextUtils.i18n('%MODULENAME%/ACTION_CLOSE_DELETE_DRAFT')
+	]);
 };
 
 module.exports = new CMastodonSettingsFormView();
