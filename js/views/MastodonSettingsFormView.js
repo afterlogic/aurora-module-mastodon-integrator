@@ -31,6 +31,7 @@ function CMastodonSettingsFormView()
 	CAbstractSettingsFormView.call(this, Settings.ServerModuleName);
 	
 	this.accountFullname = ko.observable(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
+	this.fillAccountFullname();
 	this.accountExists = ko.computed(function () {
 		return Types.isNonEmptyString(this.accountFullname());
 	}, this);
@@ -43,10 +44,6 @@ function CMastodonSettingsFormView()
 		}
 		return TextUtils.i18n('%MODULENAME%/HINT_NO_ACCOUNT');
 	}, this);
-	console.log('this.hint', this.hint());
-	this.hint.subscribe(function () {
-		console.log('this.hint', this.hint());
-	}, this);
 	this.emails = ko.observableArray([]);
 	this.selectedEmail = ko.observable('');
 	this.password = ko.observable('');
@@ -58,10 +55,27 @@ CMastodonSettingsFormView.prototype.ViewTemplate = '%ModuleName%_MastodonSetting
 
 CMastodonSettingsFormView.prototype.onShow = function ()
 {
-	this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
-	this.emails(ModulesManager.run('MailWebclient', 'getAllAccountsFullEmails'));
+	var
+		oAccountList = ModulesManager.run('MailWebclient', 'getAccountList'),
+		oAccount = oAccountList ? oAccountList.getDefault() : null,
+		aEmails = []
+	;
+	if (oAccount)
+	{
+		aEmails.push(oAccount.fullEmail());
+		_.each(oAccount.aliases(), function (oAlias) {
+			aEmails.push(oAlias.fullEmail());
+		});
+	}
+	this.emails(aEmails);
 	this.selectedEmail('');
 	this.password('');
+	this.fillAccountFullname();
+};
+
+CMastodonSettingsFormView.prototype.fillAccountFullname = function ()
+{
+	this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
 };
 
 CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
@@ -93,7 +107,7 @@ CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 			if (oResponse.Result)
 			{
 				Settings.updateAccount(oRequest.Parameters.Username, oRequest.Parameters.Email);
-				this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
+				this.fillAccountFullname();
 				Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REGISTER_ACCOUNT'));
 			}
 			else
@@ -148,7 +162,7 @@ CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
 						if (oResponse.Result)
 						{
 							Settings.updateAccount('', '');
-							this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
+							this.fillAccountFullname();
 							Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REMOVE_ACCOUNT'));
 						}
 						else
