@@ -5,6 +5,7 @@ module.exports = function (oAppData) {
 //		_ = require('underscore'),
 //				
 		TextUtils = require('%PathToCoreWebclientModule%/js/utils/Text.js'),
+		Types = require('%PathToCoreWebclientModule%/js/utils/Types.js'),
 				
 		App = require('%PathToCoreWebclientModule%/js/App.js'),
 		
@@ -45,6 +46,14 @@ module.exports = function (oAppData) {
 					Settings.HashModuleName,
 					TextUtils.i18n('%MODULENAME%/LABEL_SETTINGS_TAB')
 				]);
+				App.subscribeEvent('OpenPgpFilesWebclient::OpenSharePopup::after', function (oParams) {
+					if (Types.isNonEmptyString(Settings.AccountEmail) && oParams && oParams.Item && oParams.Item.oExtendedProps && !Types.isNonEmptyString(oParams.Item.oExtendedProps.PasswordForSharing))
+					{
+						var oShareButtonView = require('modules/%ModuleName%/js/views/ShareButtonView.js');
+						oShareButtonView.setPublicLink(oParams.Item.oExtendedProps.PublicLink);
+						oParams.AddButtons.push(oShareButtonView);
+					}
+				});
 			}
 		};
 	}
