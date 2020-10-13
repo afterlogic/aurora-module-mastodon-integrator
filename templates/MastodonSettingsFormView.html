@@ -4,7 +4,15 @@
 	</div>
 	<div class="panel_center">
 		<div class="fields">
-			<div class="fieldset" data-bind="visible: !accountExist()">
+			<div class="fieldset" data-bind="visible: accountExists">
+				<div class="row hint">
+					<span class="value" data-bind="text: hint"></span>
+				</div>
+			</div>
+			<div class="fieldset" data-bind="visible: !accountExists()">
+				<div class="row hint">
+					<span class="value" data-bind="text: hint"></span>
+				</div>
 				<div class="row">
 					<span class="label" data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_EMAIL'}"></span>
 					<select class="input" data-bind="options: emails, value: selectedEmail"></select>
@@ -14,19 +22,19 @@
 					<input type="password" class="input" data-bind="value: password" />
 				</div>
 			</div>
-			<div class="buttons" style="text-align: left;" data-bind="visible: !accountExist()">
+			<div class="buttons" style="text-align: left;" data-bind="visible: !accountExists()">
 				<span class="button" data-bind="click: createMastodonAccount">
-					<span data-bind="i18n: {'key': '%MODULENAME%/BUTTON_CREATE_MASTODON_ACCOUNT'}"></span>
+					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_CREATE_MASTODON_ACCOUNT'}"></span>
 				</span>
 			</div>
-			<div class="buttons" style="text-align: left;" data-bind="visible: accountExist">
+			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists">
 				<span class="button" data-bind="click: changeMastodonAccountPassword">
-					<span data-bind="i18n: {'key': '%MODULENAME%/BUTTON_CHANGE_MASTODON_ACCOUNT_PASSWORD'}"></span>
+					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_CHANGE_MASTODON_ACCOUNT_PASSWORD'}"></span>
 				</span>
 			</div>
-			<div class="buttons" style="text-align: left;" data-bind="visible: accountExist">
+			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists">
 				<span class="button" data-bind="click: removeMastodonAccount">
-					<span data-bind="i18n: {'key': '%MODULENAME%/BUTTON_REMOVE_MASTODON_ACCOUNT'}"></span>
+					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_REMOVE_MASTODON_ACCOUNT'}"></span>
 				</span>
 			</div>
 		</div>

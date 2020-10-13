@@ -2,23 +2,21 @@
 
 var
 	_ = require('underscore'),
-	$ = require('jquery'),
 	ko = require('knockout'),
 	
 	AddressUtils = require('%PathToCoreWebclientModule%/js/utils/Address.js'),
 	TextUtils = require('%PathToCoreWebclientModule%/js/utils/Text.js'),
 	Types = require('%PathToCoreWebclientModule%/js/utils/Types.js'),
-	UrlUtils = require('%PathToCoreWebclientModule%/js/utils/Url.js'),
 	
 	Ajax = require('%PathToCoreWebclientModule%/js/Ajax.js'),
 	Api = require('%PathToCoreWebclientModule%/js/Api.js'),
-	App = require('%PathToCoreWebclientModule%/js/App.js'),
 	ModulesManager = require('%PathToCoreWebclientModule%/js/ModulesManager.js'),
-	WindowOpener = require('%PathToCoreWebclientModule%/js/WindowOpener.js'),
+	Screens = require('%PathToCoreWebclientModule%/js/Screens.js'),
 	UserSettings = require('%PathToCoreWebclientModule%/js/Settings.js'),
 
 	Popups = require('%PathToCoreWebclientModule%/js/Popups.js'),
 	ConfirmPopup = require('%PathToCoreWebclientModule%/js/popups/ConfirmPopup.js'),
+	EnterPasswordPopup = require('modules/%ModuleName%/js/popups/EnterPasswordPopup.js'),
 
 	CAbstractSettingsFormView = ModulesManager.run('SettingsWebclient', 'getAbstractSettingsFormViewClass'),
 	
@@ -32,7 +30,23 @@ function CMastodonSettingsFormView()
 {
 	CAbstractSettingsFormView.call(this, Settings.ServerModuleName);
 	
-	this.accountExist = ko.observable(false);
+	this.accountFullname = ko.observable(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
+	this.accountExists = ko.computed(function () {
+		return Types.isNonEmptyString(this.accountFullname());
+	}, this);
+	this.hint = ko.computed(function () {
+		if (this.accountExists())
+		{
+			return TextUtils.i18n('%MODULENAME%/HINT_YOUR_ACCOUNT', {
+				'FULLEMAIL': this.accountFullname()
+			});
+		}
+		return TextUtils.i18n('%MODULENAME%/HINT_NO_ACCOUNT');
+	}, this);
+	console.log('this.hint', this.hint());
+	this.hint.subscribe(function () {
+		console.log('this.hint', this.hint());
+	}, this);
 	this.emails = ko.observableArray([]);
 	this.selectedEmail = ko.observable('');
 	this.password = ko.observable('');
@@ -44,7 +58,7 @@ CMastodonSettingsFormView.prototype.ViewTemplate = '%ModuleName%_MastodonSetting
 
 CMastodonSettingsFormView.prototype.onShow = function ()
 {
-	this.accountExist(false);
+	this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
 	this.emails(ModulesManager.run('MailWebclient', 'getAllAccountsFullEmails'));
 	this.selectedEmail('');
 	this.password('');
@@ -60,6 +74,11 @@ CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 	{
 		sUsername = oEmailParts.email.split('@')[0];
 	}
+	if (!Types.isNonEmptyString(this.password()))
+	{
+		Screens.showError(TextUtils.i18n('%MODULENAME%/ERROR_PASSWORD_EMPTY'));
+		return;
+	}
 	Ajax.send(
 		'%ModuleName%',
 		'RegisterMastodonAccount',
@@ -73,7 +92,8 @@ CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 		function (oResponse, oRequest) {
 			if (oResponse.Result)
 			{
-				this.accountExist(true);
+				Settings.updateAccount(oRequest.Parameters.Username, oRequest.Parameters.Email);
+				this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
 				Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REGISTER_ACCOUNT'));
 			}
 			else
@@ -87,7 +107,31 @@ CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 
 CMastodonSettingsFormView.prototype.changeMastodonAccountPassword = function ()
 {
-	console.log('changeMastodonAccountPassword');
+	Popups.showPopup(EnterPasswordPopup, [
+		_.bind(function (sNewPassword) {
+			if (Types.isNonEmptyString(sNewPassword))
+			{
+				Ajax.send(
+					'%ModuleName%',
+					'ChangeMastodonAccountPassword',
+					{
+						'NewPassword': sNewPassword
+					},
+					function (oResponse, oRequest) {
+						if (oResponse.Result)
+						{
+							Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_CHANGE_PASSWORD_ACCOUNT'));
+						}
+						else
+						{
+							Api.showErrorByCode(oResponse, TextUtils.i18n('%MODULENAME%/ERROR_CHANGE_PASSWORD_ACCOUNT'));
+						}
+					},
+					this
+				);
+			}
+		}, this)
+	]);
 };
 
 CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
@@ -96,12 +140,27 @@ CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
 		_.bind(function (bOk) {
 			if (bOk)
 			{
-				this.closeComposesWithDraftUids(aUids);
-				fMoveMessages();
+				Ajax.send(
+					'%ModuleName%',
+					'RemoveMastodonAccount',
+					{},
+					function (oResponse, oRequest) {
+						if (oResponse.Result)
+						{
+							Settings.updateAccount('', '');
+							this.accountFullname(AddressUtils.getFullEmail(Settings.AccountUsername, Settings.AccountEmail));
+							Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REMOVE_ACCOUNT'));
+						}
+						else
+						{
+							Api.showErrorByCode(oResponse, TextUtils.i18n('%MODULENAME%/ERROR_REMOVE_ACCOUNT'));
+						}
+					},
+					this
+				);
 			}
-			this.disableComposeAutosave(false);
 		}, this), 
-		'', TextUtils.i18n('%MODULENAME%/ACTION_CLOSE_DELETE_DRAFT')
+		'', TextUtils.i18n('%MODULENAME%/ACTION_REMOVE_MASTODON_ACCOUNT')
 	]);
 };
 
