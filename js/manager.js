@@ -13,9 +13,9 @@ module.exports = function (oAppData) {
 //		
 //		bAdminUser = App.getUserRole() === Enums.UserRole.SuperAdmin
 	;
-//
-//	Settings.init(oAppData);
-//	
+
+	Settings.init(oAppData);
+	
 //	if (bAdminUser)
 //	{
 //		return {
