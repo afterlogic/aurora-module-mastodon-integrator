@@ -21,7 +21,15 @@ function СShareButtonView()
 
 СShareButtonView.prototype.setPublicLink = function (sPublicLink)
 {
-	this.sPublicLink = UrlUtils.getAppPath() + sPublicLink;
+	var sAppPath = UrlUtils.getAppPath();
+	if (sPublicLink.indexOf(sAppPath) !== -1)
+	{
+		this.sPublicLink = sPublicLink;
+	}
+	else
+	{
+		this.sPublicLink = UrlUtils.getAppPath() + sPublicLink;
+	}
 };
 
 module.exports = new СShareButtonView();

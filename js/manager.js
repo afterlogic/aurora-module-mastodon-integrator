@@ -47,10 +47,23 @@ module.exports = function (oAppData) {
 					TextUtils.i18n('%MODULENAME%/LABEL_SETTINGS_TAB')
 				]);
 				App.subscribeEvent('OpenPgpFilesWebclient::OpenSharePopup::after', function (oParams) {
-					if (Types.isNonEmptyString(Settings.AccountEmail) && oParams && oParams.Item && oParams.Item.oExtendedProps && !Types.isNonEmptyString(oParams.Item.oExtendedProps.PasswordForSharing))
+					var oItemProps = oParams && oParams.Item && oParams.Item.oExtendedProps;
+					// Show PM.Social button if user has PM.Social account and public link was secured by OpenPgp key (not password)
+					if (Types.isNonEmptyString(Settings.AccountEmail) && oItemProps 
+							&& (!Types.isNonEmptyString(oItemProps.PasswordForSharing) && !Types.isNonEmptyString(oItemProps.PublicLinkPgpEncryptionMode) 
+							|| oItemProps.PublicLinkPgpEncryptionMode === Enums.EncryptionBasedOn.Key))
 					{
 						var oShareButtonView = require('modules/%ModuleName%/js/views/ShareButtonView.js');
-						oShareButtonView.setPublicLink(oParams.Item.oExtendedProps.PublicLink);
+						oShareButtonView.setPublicLink(oItemProps.PublicLink);
+						oParams.AddButtons.push(oShareButtonView);
+					}
+				});
+				App.subscribeEvent('OpenPgpFilesWebclient::ShareEncryptedFile::after', function (oParams) {
+					// Show PM.Social button if user has PM.Social account and public link was secured by OpenPgp key (not password)
+					if (Types.isNonEmptyString(Settings.AccountEmail) && oParams.EncryptionBasedMode === Enums.EncryptionBasedOn.Key)
+					{
+						var oShareButtonView = require('modules/%ModuleName%/js/views/ShareButtonView.js');
+						oShareButtonView.setPublicLink(oParams.EncryptedFileLink);
 						oParams.AddButtons.push(oShareButtonView);
 					}
 				});
