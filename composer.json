@@ -4,7 +4,7 @@
 	"require": {
 		"php": ">=5.4.0",
 		"afterlogic/aurora-framework": "~0.9.0",
-		"afterlogic/mastodon-api": "^0.0.2"
+		"afterlogic/mastodon-api": "^0.0.4"
 
 	},
 	"extra": {
