@@ -44,9 +44,28 @@ function CMastodonSettingsFormView()
 		}
 		return TextUtils.i18n('%MODULENAME%/HINT_NO_ACCOUNT');
 	}, this);
+	
+	this.username = ko.observable('');
+	this.prevSelectedUsername = ko.observable('');
 	this.emails = ko.observableArray([]);
 	this.selectedEmail = ko.observable('');
 	this.password = ko.observable('');
+	
+	this.selectedEmail.subscribe(function () {
+		var
+			oEmailParts = AddressUtils.getEmailParts(this.selectedEmail()),
+			sUsername = oEmailParts.name
+		;
+		if (!Types.isNonEmptyString(sUsername))
+		{
+			sUsername = oEmailParts.email.split('@')[0];
+		}
+		if (this.username() === '' || this.username() === this.prevSelectedUsername())
+		{
+			this.username(sUsername);
+		}
+		this.prevSelectedUsername(sUsername);
+	}, this);
 }
 
 _.extendOwn(CMastodonSettingsFormView.prototype, CAbstractSettingsFormView.prototype);
@@ -67,8 +86,10 @@ CMastodonSettingsFormView.prototype.onShow = function ()
 			aEmails.push(oAlias.fullEmail());
 		});
 	}
-	this.emails(aEmails);
+	this.prevSelectedUsername('');
+	this.username('');
 	this.selectedEmail('');
+	this.emails(aEmails);
 	this.password('');
 	this.fillAccountFullname();
 };
@@ -80,24 +101,17 @@ CMastodonSettingsFormView.prototype.fillAccountFullname = function ()
 
 CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 {
-	var
-		oEmailParts = AddressUtils.getEmailParts(this.selectedEmail()),
-		sUsername = oEmailParts.name
-	;
-	if (!Types.isNonEmptyString(sUsername))
-	{
-		sUsername = oEmailParts.email.split('@')[0];
-	}
 	if (!Types.isNonEmptyString(this.password()))
 	{
 		Screens.showError(TextUtils.i18n('%MODULENAME%/ERROR_PASSWORD_EMPTY'));
 		return;
 	}
+	var oEmailParts = AddressUtils.getEmailParts(this.selectedEmail());
 	Ajax.send(
 		'%ModuleName%',
 		'RegisterMastodonAccount',
 		{
-			'Username': sUsername,
+			'Username': this.username(),
 			'Email': oEmailParts.email,
 			'Password': this.password(),
 			'Agreement': true,

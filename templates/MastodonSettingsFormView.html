@@ -14,6 +14,10 @@
 					<span class="value" data-bind="text: hint"></span>
 				</div>
 				<div class="row">
+					<span class="label" data-bind="i18n: {'key': '%MODULENAME%/LABEL_USERNAME'}"></span>
+					<input class="input" data-bind="value: username" />
+				</div>
+				<div class="row">
 					<span class="label" data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_EMAIL'}"></span>
 					<select class="input" data-bind="options: emails, value: selectedEmail"></select>
 				</div>
