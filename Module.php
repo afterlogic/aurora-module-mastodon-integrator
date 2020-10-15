@@ -26,17 +26,27 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function init()
 	{
-
+		\Aurora\Modules\Core\Classes\User::extend(
+			self::GetName(),
+			[
+				'Username'	=> ['string', ''],
+				'Email'	=> ['string', ''],
+				'Token'	=> ['string', ''],
+				'IdAccount'	=> ['int', 0]
+			]
+		);
 	}
 
 	protected function getClient()
 	{
-		$name = 'PM.Social.Dev.App';
-		$instance = 'privatemail.social';
-		$oAuth = new \Colorfield\Mastodon\MastodonOAuth($name, $instance);
+		$oAuth = new \Colorfield\Mastodon\MastodonOAuth(
+			$this->getConfig('AppName'),
+			$this->getConfig('AppInstance')
+		);
 		$oAuth->config->setClientId($this->getConfig('ClientKey'));
 		$oAuth->config->setClientSecret($this->getConfig('ClientSecret'));
 		$oAuth->config->setBearer($this->getConfig('AccessToken'));
+
 		return new \Colorfield\Mastodon\MastodonAPI($oAuth->config);
 	}
 	/***** private functions *****/
@@ -64,6 +74,13 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		if (!empty($oUser) && $oUser->isNormalOrTenant())
 		{
+			if (!empty($oUser->{self::GetName().'::Token'}))
+			{
+				$aResult = [
+					'AccountUsername' => $oUser->{self::GetName().'::Username'},
+					'AccountEmail' => $oUser->{self::GetName().'::Email'}
+				];
+			}
 		}
 
 		return $aResult;
@@ -95,8 +112,9 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	public function RegisterMastodonAccount($Username, $Email, $Password, $Agreement = true, $Locale = 'en')
 	{
+		$mResult = false;
 		$oClient = $this->getClient();
-		$aResult = $oClient->post('/accounts', [
+		$aResult = $oClient->getResponse('/accounts', 'post', [
 			'username' => $Username,
 			'email' => $Email,
 			'password' => $Password,
@@ -110,34 +128,96 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		else
 		{
-			return true;
+			$oUser = \Aurora\System\Api::getAuthenticatedUser();
+			$oUser->{self::GetName().'::Username'} = $Username;
+			$oUser->{self::GetName().'::Email'} = $Email;
+			$oUser->{self::GetName().'::Token'} = $aResult['access_token'];
+
+			$aAccountsInfo = $oClient->getResponse(
+				'/admin/accounts',
+				'get',
+				[
+					'username' => $Username,
+					'email' => $Email
+				]
+			);
+			if (isset($aAccountsInfo[0]))
+			{
+				$oUser->{self::GetName().'::IdAccount'} = (int) $aAccountsInfo[0]['id'];
+				$oUser->saveAttributes([
+					self::GetName().'::Username',
+					self::GetName().'::Email',
+					self::GetName().'::Token',
+					self::GetName().'::IdAccount'
+				]);
+
+				$mResult = true;
+			}
 		}
+
+		return $mResult;
 	}
 
 	public function RemoveMastodonAccount()
 	{
-		$oClient = $this->getClient();
-		$aResult = $oClient->post('/accounts', [
-			'username' => $Username,
-			'email' => $Email,
-			'password' => $Password,
-			'agreement' => $Agreement,
-			'locale' => $Locale
-		]);
-
-		if (isset($aResult['error']))
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if (isset($oUser->{self::GetName().'::IdAccount'}))
 		{
-			throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
+			$oClient = $this->getClient();
+			$aResult = $oClient->getResponse('/admin/accounts/' . $oUser->{self::GetName().'::IdAccount'} . '/action', 'post', [
+				'type' => 'suspend'
+			]);
+
+			if (isset($aResult['error']))
+			{
+				throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
+			}
+			else
+			{
+				$oUser->{self::GetName().'::Username'} = '';
+				$oUser->{self::GetName().'::Email'} = '';
+				$oUser->{self::GetName().'::Token'} = '';
+				$oUser->{self::GetName().'::IdAccount'} = 0;
+				$oUser->saveAttributes([
+					self::GetName().'::Username',
+					self::GetName().'::Email',
+					self::GetName().'::Token',
+					self::GetName().'::IdAccount'
+				]);
+				return true;
+			}
 		}
 		else
 		{
-			return true;
+			return false;
 		}
+	}
+
+	public function LoginToMastodonAccount($Username, $Password)
+	{
+		$oAuth = new \Colorfield\Mastodon\MastodonOAuth(
+			$this->getConfig('AppName'),
+			$this->getConfig('AppInstance')
+		);
+		$oAuth->config->setClientId($this->getConfig('ClientKey'));
+		$oAuth->config->setClientSecret($this->getConfig('ClientSecret'));
+		$oAuth->config->setBearer($this->getConfig('AccessToken'));
+		$oAuth->config->setScopes(['read', 'write', 'follow']);
+
+		$url = $oAuth->getAuthorizationUrl();
+		echo $url; exit;
+
+		return $oAuth->authenticateUser($Username, $Password);
 	}
 
 	public function ChangeMastodonAccountPassword($NewPassword)
 	{
-
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if (isset($oUser->{self::GetName().'::IdAccount'}))
+		{
+			$aResult = $this->LoginToMastodonAccount($oUser->{self::GetName().'::Username'}, $NewPassword);
+			\var_dump($aResult);
+		}
 	}
 	/***** public functions might be called with web API *****/
 }
