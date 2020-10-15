@@ -1,7 +1,10 @@
 'use strict';
 
 var
-	UrlUtils = require('%PathToCoreWebclientModule%/js/utils/Url.js')
+	UrlUtils = require('%PathToCoreWebclientModule%/js/utils/Url.js'),
+			
+	Popups = require('%PathToCoreWebclientModule%/js/Popups.js'),
+	PostPublicLinkPopup = require('modules/%ModuleName%/js/popups/PostPublicLinkPopup.js')
 ;
 
 /**
@@ -16,7 +19,7 @@ function СShareButtonView()
 
 СShareButtonView.prototype.shareViaPmsocial = function ()
 {
-	console.log('this.sPublicLink', this.sPublicLink);
+	Popups.showPopup(PostPublicLinkPopup, [this.sPublicLink]);
 };
 
 СShareButtonView.prototype.setPublicLink = function (sPublicLink)

@@ -7,6 +7,8 @@ var
 	TextUtils = require('%PathToCoreWebclientModule%/js/utils/Text.js'),
 	Types = require('%PathToCoreWebclientModule%/js/utils/Types.js'),
 
+	Ajax = require('%PathToCoreWebclientModule%/js/Ajax.js'),
+	Api = require('%PathToCoreWebclientModule%/js/Api.js'),
 	Screens = require('%PathToCoreWebclientModule%/js/Screens.js'),
 
 	CAbstractPopup = require('%PathToCoreWebclientModule%/js/popups/CAbstractPopup.js')
@@ -15,36 +17,46 @@ var
 /**
  * @constructor
  */
-function CEnterPasswordPopup()
+function CPostPublicLinkPopup()
 {
 	CAbstractPopup.call(this);
 
-	this.newPassword = ko.observable('');
-	this.fCallback = null;
+	this.private = ko.observable(false);
+	this.message = ko.observable('');
 }
 
-_.extendOwn(CEnterPasswordPopup.prototype, CAbstractPopup.prototype);
+_.extendOwn(CPostPublicLinkPopup.prototype, CAbstractPopup.prototype);
 
-CEnterPasswordPopup.prototype.PopupTemplate = '%ModuleName%_EnterPasswordPopup';
+CPostPublicLinkPopup.prototype.PopupTemplate = '%ModuleName%_PostPublicLinkPopup';
 
-CEnterPasswordPopup.prototype.onOpen = function (fCallback)
+CPostPublicLinkPopup.prototype.onOpen = function (sPublicLink)
 {
-	this.newPassword('');
-	this.fCallback = fCallback;
+	this.private(false);
+	this.message('Hi! Look at my file from the link: \n\n' + sPublicLink);
 };
 
-CEnterPasswordPopup.prototype.enterPassword = function ()
+CPostPublicLinkPopup.prototype.publishPost = function ()
 {
-	if (!Types.isNonEmptyString(this.newPassword()))
-	{
-		Screens.showError(TextUtils.i18n('%MODULENAME%/ERROR_PASSWORD_EMPTY'));
-		return;
-	}
-	if (_.isFunction(this.fCallback))
-	{
-		this.fCallback(this.newPassword());
-	}
+	Ajax.send(
+		'%ModuleName%',
+		'SendPostMessage',
+		{
+			'Message': this.message(),
+			'Direct': this.private()
+		},
+		function (oResponse, oRequest) {
+			if (oResponse.Result)
+			{
+				Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_PUBLISH_POST'));
+			}
+			else
+			{
+				Api.showErrorByCode(oResponse, TextUtils.i18n('%MODULENAME%/ERROR_PUBLISH_POST'));
+			}
+		},
+		this
+	);
 	this.closePopup();
 };
 
-module.exports = new CEnterPasswordPopup();
+module.exports = new CPostPublicLinkPopup();
