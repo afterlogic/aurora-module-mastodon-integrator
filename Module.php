@@ -219,5 +219,33 @@ class Module extends \Aurora\System\Module\AbstractModule
 			\var_dump($aResult);
 		}
 	}
+
+	public function SendPostMessage($Message, $Direct = false)
+	{
+		$mResult = false;
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if (isset($oUser->{self::GetName().'::IdAccount'}))
+		{
+			$oClient = $this->getClient();
+			$options = [
+				'status' => $Message,
+			];
+			if ($Direct)
+			{
+				$options['visibility'] = 'direct';
+			}
+			$aResult = $oClient->getResponse('/statuses', 'post', $options, $oUser->{self::GetName().'::Token'});
+			if (isset($aResult['error']))
+			{
+				throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
+			}
+			else
+			{
+				$mResult = true;
+			}
+		}
+
+		return $mResult;
+	}
 	/***** public functions might be called with web API *****/
 }
