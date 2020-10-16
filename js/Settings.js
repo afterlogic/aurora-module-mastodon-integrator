@@ -31,9 +31,8 @@ module.exports = {
 		}
 	},
 	
-	updateAccount: function (sAccountUsername, sAccountEmail)
+	setAccountSuspended: function ()
 	{
-		this.AccountUsername = sAccountUsername;
-		this.AccountEmail = sAccountEmail;
+		this.AccountSuspended = true;
 	}
 };

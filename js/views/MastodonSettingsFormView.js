@@ -189,7 +189,7 @@ CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
 					function (oResponse, oRequest) {
 						if (oResponse.Result)
 						{
-							Settings.updateAccount('', '');
+							Settings.setAccountSuspended();
 							this.fillAccountData();
 							Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REMOVE_ACCOUNT'));
 						}

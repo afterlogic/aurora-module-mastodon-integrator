@@ -17,13 +17,13 @@
 					<span class="value" data-bind="text: hint"></span>
 				</div>
 				<div class="row">
-					<span class="label" data-bind="i18n: {'key': '%MODULENAME%/LABEL_USERNAME'}"></span>
-					<input class="input" data-bind="value: username" />
+					<span class="label" disable data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_EMAIL'}"></span>
+					<span class="value" data-bind="text: selectedEmail"></span>
+					<!--<select class="input" data-bind="options: emails, value: selectedEmail"></select>-->
 				</div>
 				<div class="row">
-					<span class="label" data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_EMAIL'}"></span>
-					<input class="input" data-bind="value: selectedEmail" />
-					<!--<select class="input" data-bind="options: emails, value: selectedEmail"></select>-->
+					<span class="label" data-bind="i18n: {'key': '%MODULENAME%/LABEL_USERNAME'}"></span>
+					<input class="input" data-bind="value: username" />
 				</div>
 				<div class="row">
 					<span class="label" data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_PASSWORD'}"></span>
