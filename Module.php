@@ -32,9 +32,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 				'Username'	=> ['string', ''],
 				'Email'	=> ['string', ''],
 				'Token'	=> ['string', ''],
-				'IdAccount'	=> ['int', 0]
+				'IdAccount'	=> ['int', 0],
+				'Suspended' => ['bool', false]
 			]
 		);
+		$this->subscribeEvent('CpanelIntegrator::DeleteAliases::after', array($this, 'onAfterDeleteAliases'));
 	}
 
 	protected function getClient()
@@ -49,6 +51,80 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 		return new \Colorfield\Mastodon\MastodonAPI($oAuth->config);
 	}
+
+	protected function getUserWithMastodonAccount($sEmail)
+	{
+		return (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
+			->where([
+				$this->GetName() . '::Email' => [$sEmail, '=']
+			])
+			->one()
+			->exec();
+
+	}
+
+	protected function suspendMastodonAccountByUser($oUser)
+	{
+		$bResult = false;
+		if (isset($oUser->{self::GetName().'::IdAccount'}))
+		{
+			$oClient = $this->getClient();
+			$aResult = $oClient->getResponse('/admin/accounts/' . $oUser->{self::GetName().'::IdAccount'} . '/action', 'post', [
+				'type' => 'suspend'
+			]);
+
+			if (isset($aResult['error']))
+			{
+				throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
+			}
+			else
+			{
+				$oUser->{self::GetName().'::Suspended'} = true;
+				$oUser->saveAttributes([
+					self::GetName().'::Suspended'
+				]);
+				$bResult = true;
+			}
+		}
+		return $bResult;
+	}
+
+	protected function unsuspendMastodonAccountByUser($oUser)
+	{
+		$bResult = false;
+		if (isset($oUser->{self::GetName().'::IdAccount'}))
+		{
+			$oClient = $this->getClient();
+			$aResult = $oClient->getResponse('/admin/accounts/' . $oUser->{self::GetName().'::IdAccount'} . '/unsuspend', 'post', []);
+
+			if (isset($aResult['error']))
+			{
+				throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
+			}
+			else
+			{
+				$oUser->{self::GetName().'::Suspended'} = false;
+				$oUser->saveAttributes([
+					self::GetName().'::Suspended'
+				]);
+				$bResult = true;
+			}
+		}
+		return $bResult;
+	}
+
+	public function onAfterDeleteAliases($aArgs, $mResult)
+	{
+		if (isset($aArgs['Aliases']))
+		{
+			foreach ($aArgs['Aliases'] as $sAlias)
+			{
+				$oUser = $this->getUserWithMastodonAccount($sAlias);
+			}
+		}
+
+	}
+
 	/***** private functions *****/
 
 	/***** public functions might be called with web API *****/
@@ -78,7 +154,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			{
 				$aResult = [
 					'AccountUsername' => $oUser->{self::GetName().'::Username'},
-					'AccountEmail' => $oUser->{self::GetName().'::Email'}
+					'AccountEmail' => $oUser->{self::GetName().'::Email'},
+					'AccountSuspended' => $oUser->{self::GetName().'::Suspended'}
 				];
 			}
 		}
@@ -157,39 +234,18 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $mResult;
 	}
 
-	public function RemoveMastodonAccount()
+	public function SuspendMastodonAccount()
 	{
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		if (isset($oUser->{self::GetName().'::IdAccount'}))
-		{
-			$oClient = $this->getClient();
-			$aResult = $oClient->getResponse('/admin/accounts/' . $oUser->{self::GetName().'::IdAccount'} . '/action', 'post', [
-				'type' => 'suspend'
-			]);
+		return $this->suspendMastodonAccountByUser(
+			\Aurora\System\Api::getAuthenticatedUser()
+		);
+	}
 
-			if (isset($aResult['error']))
-			{
-				throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
-			}
-			else
-			{
-				$oUser->{self::GetName().'::Username'} = '';
-				$oUser->{self::GetName().'::Email'} = '';
-				$oUser->{self::GetName().'::Token'} = '';
-				$oUser->{self::GetName().'::IdAccount'} = 0;
-				$oUser->saveAttributes([
-					self::GetName().'::Username',
-					self::GetName().'::Email',
-					self::GetName().'::Token',
-					self::GetName().'::IdAccount'
-				]);
-				return true;
-			}
-		}
-		else
-		{
-			return false;
-		}
+	public function UnsuspendMastodonAccount()
+	{
+		return $this->unsuspendMastodonAccountByUser(
+			\Aurora\System\Api::getAuthenticatedUser()
+		);
 	}
 
 	public function LoginToMastodonAccount($Username, $Password)
