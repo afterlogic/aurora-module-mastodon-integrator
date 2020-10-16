@@ -37,6 +37,7 @@ function CMastodonSettingsFormView()
 	this.accountExists = ko.computed(function () {
 		return Types.isNonEmptyString(this.accountFullname());
 	}, this);
+	this.accountConfirmed = ko.observable(false);
 	this.hint = ko.computed(function () {
 		if (this.accountExists())
 		{
@@ -105,6 +106,28 @@ CMastodonSettingsFormView.prototype.onShow = function ()
 	this.selectedEmail(App.getUserPublicId());
 	this.password('');
 	this.fillAccountData();
+	this.fillAccountConfirmed();
+};
+
+CMastodonSettingsFormView.prototype.fillAccountConfirmed = function ()
+{
+	if (Settings.AccountConfirmed)
+	{
+		this.accountConfirmed(true);
+	}
+	else
+	{
+		Ajax.send(
+			'%ModuleName%',
+			'IsMastodonAccountConfirmed',
+			{},
+			function (oResponse, oRequest) {
+				Settings.setAccountConfirmed(!!oResponse.Result);
+				this.accountConfirmed(Settings.AccountConfirmed);
+			},
+			this
+		);
+	}
 };
 
 CMastodonSettingsFormView.prototype.fillAccountData = function ()

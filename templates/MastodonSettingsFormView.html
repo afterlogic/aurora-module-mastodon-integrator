@@ -8,7 +8,10 @@
 				<div class="row">
 					<span class="value" data-bind="text: hint"></span>
 				</div>
-				<div class="row" data-bind="visible: accountSuspended">
+				<div class="row" data-bind="visible: !accountConfirmed()">
+					<span class="value" data-bind="i18n: {'key': '%MODULENAME%/INFO_NOT_CONFIRMED_MASTODON_ACCOUNT'}"></span>
+				</div>
+				<div class="row" data-bind="visible: accountConfirmed() && accountSuspended()">
 					<span class="value" data-bind="i18n: {'key': '%MODULENAME%/INFO_SUSPENDED_MASTODON_ACCOUNT'}"></span>
 				</div>
 			</div>
@@ -40,7 +43,7 @@
 					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_CHANGE_MASTODON_ACCOUNT_PASSWORD'}"></span>
 				</span>
 			</div>-->
-			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists() && !accountSuspended()">
+			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists() && accountConfirmed() && !accountSuspended()">
 				<span class="button" data-bind="click: removeMastodonAccount">
 					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_REMOVE_MASTODON_ACCOUNT'}"></span>
 				</span>

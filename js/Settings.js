@@ -12,6 +12,7 @@ module.exports = {
 	
 	AccountUsername: '',
 	AccountEmail: '',
+	AccountConfirmed: false,
 	AccountSuspended: false,
 	
 	/**
@@ -27,6 +28,7 @@ module.exports = {
 		{
 			this.AccountUsername = Types.pString(oAppDataSection.AccountUsername, this.AccountUsername);
 			this.AccountEmail = Types.pString(oAppDataSection.AccountEmail, this.AccountEmail);
+			this.AccountConfirmed = Types.pBool(oAppDataSection.AccountConfirmed, this.AccountConfirmed);
 			this.AccountSuspended = Types.pBool(oAppDataSection.AccountSuspended, this.AccountSuspended);
 		}
 	},
@@ -35,6 +37,11 @@ module.exports = {
 	{
 		this.AccountUsername = sAccountUsername;
 		this.AccountEmail = sAccountEmail;
+	},
+	
+	setAccountConfirmed: function (bAccountConfirmed)
+	{
+		this.AccountConfirmed = bAccountConfirmed;
 	},
 	
 	setAccountSuspended: function (bAccountSuspended)
