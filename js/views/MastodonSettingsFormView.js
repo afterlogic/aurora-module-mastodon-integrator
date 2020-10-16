@@ -189,7 +189,7 @@ CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
 					function (oResponse, oRequest) {
 						if (oResponse.Result)
 						{
-							Settings.setAccountSuspended();
+							Settings.setAccountSuspended(true);
 							this.fillAccountData();
 							Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_REMOVE_ACCOUNT'));
 						}
@@ -215,7 +215,7 @@ CMastodonSettingsFormView.prototype.unsuspendMastodonAccount = function ()
 		function (oResponse, oRequest) {
 			if (oResponse.Result)
 			{
-				Settings.updateAccount('', '');
+				Settings.setAccountSuspended(false);
 				this.fillAccountData();
 				Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_UNSUSPEND_ACCOUNT'));
 			}

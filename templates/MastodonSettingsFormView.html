@@ -5,15 +5,15 @@
 	<div class="panel_center">
 		<div class="fields">
 			<div class="fieldset" data-bind="visible: accountExists">
-				<div class="row hint">
+				<div class="row">
 					<span class="value" data-bind="text: hint"></span>
 				</div>
-				<div class="row hint" data-bind="visible: accountSuspended">
+				<div class="row" data-bind="visible: accountSuspended">
 					<span class="value" data-bind="i18n: {'key': '%MODULENAME%/INFO_SUSPENDED_MASTODON_ACCOUNT'}"></span>
 				</div>
 			</div>
 			<div class="fieldset" data-bind="visible: !accountExists()">
-				<div class="row hint">
+				<div class="row">
 					<span class="value" data-bind="text: hint"></span>
 				</div>
 				<div class="row">
