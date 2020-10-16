@@ -155,7 +155,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 				$aResult = [
 					'AccountUsername' => $oUser->{self::GetName().'::Username'},
 					'AccountEmail' => $oUser->{self::GetName().'::Email'},
-					'AccountSuspended' => $oUser->{self::GetName().'::Suspended'}
+					'AccountSuspended' => $oUser->{self::GetName().'::Suspended'},
+					'AccountConfirmed' => $this->IsMastodonAccountConfirmed()
 				];
 			}
 		}
@@ -246,6 +247,25 @@ class Module extends \Aurora\System\Module\AbstractModule
 		return $this->unsuspendMastodonAccountByUser(
 			\Aurora\System\Api::getAuthenticatedUser()
 		);
+	}
+
+	public function IsMastodonAccountConfirmed()
+	{
+		$mResult = false;
+		$oClient = $this->getClient();
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$aResult = $oClient->getResponse('/admin/accounts/' . $oUser->{self::GetName().'::IdAccount'}, 'get', []);
+
+		if (isset($aResult['error']))
+		{
+			throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
+		}
+		else
+		{
+			$mResult = isset($aResult['confirmed']) ? $aResult['confirmed'] : false;
+		}
+
+		return $mResult;
 	}
 
 	public function LoginToMastodonAccount($Username, $Password)
