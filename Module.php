@@ -128,11 +128,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 		}
 		else
 		{
-			$oUser = \Aurora\System\Api::getAuthenticatedUser();
-			$oUser->{self::GetName().'::Username'} = $Username;
-			$oUser->{self::GetName().'::Email'} = $Email;
-			$oUser->{self::GetName().'::Token'} = $aResult['access_token'];
-
 			$aAccountsInfo = $oClient->getResponse(
 				'/admin/accounts',
 				'get',
@@ -143,6 +138,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 			);
 			if (isset($aAccountsInfo[0]))
 			{
+				$oUser = \Aurora\System\Api::getAuthenticatedUser();
+				$oUser->{self::GetName().'::Username'} = $Username;
+				$oUser->{self::GetName().'::Email'} = $Email;
+				$oUser->{self::GetName().'::Token'} = $aResult['access_token'];
 				$oUser->{self::GetName().'::IdAccount'} = (int) $aAccountsInfo[0]['id'];
 				$oUser->saveAttributes([
 					self::GetName().'::Username',
@@ -204,10 +203,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oAuth->config->setBearer($this->getConfig('AccessToken'));
 		$oAuth->config->setScopes(['read', 'write', 'follow']);
 
-		$url = $oAuth->getAuthorizationUrl();
-		echo $url; exit;
-
-		return $oAuth->authenticateUser($Username, $Password);
+		return $oAuth->getAuthorizationUrl();
 	}
 
 	public function ChangeMastodonAccountPassword($NewPassword)
@@ -215,8 +211,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if (isset($oUser->{self::GetName().'::IdAccount'}))
 		{
-			$aResult = $this->LoginToMastodonAccount($oUser->{self::GetName().'::Username'}, $NewPassword);
-			\var_dump($aResult);
+			return $this->LoginToMastodonAccount($oUser->{self::GetName().'::Username'}, $NewPassword);
 		}
 	}
 
