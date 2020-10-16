@@ -48,6 +48,7 @@ CPostPublicLinkPopup.prototype.publishPost = function ()
 			if (oResponse.Result)
 			{
 				Screens.showReport(TextUtils.i18n('%MODULENAME%/REPORT_PUBLISH_POST'));
+				this.closePopup();
 			}
 			else
 			{
@@ -56,7 +57,6 @@ CPostPublicLinkPopup.prototype.publishPost = function ()
 		},
 		this
 	);
-	this.closePopup();
 };
 
 module.exports = new CPostPublicLinkPopup();

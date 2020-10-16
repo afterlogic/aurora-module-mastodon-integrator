@@ -54,6 +54,10 @@ function CMastodonSettingsFormView()
 	this.selectedEmail = ko.observable('');
 	this.password = ko.observable('');
 	
+	this.isCreating = ko.observable(false);
+	this.isSuspending = ko.observable(false);
+	this.isUnsuspending = ko.observable(false);
+	
 //	this.selectedEmail.subscribe(function () {
 //		var
 //			oEmailParts = AddressUtils.getEmailParts(this.selectedEmail()),
@@ -138,12 +142,18 @@ CMastodonSettingsFormView.prototype.fillAccountData = function ()
 
 CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 {
+	if (this.isCreating())
+	{
+		return;
+	}
 	if (!Types.isNonEmptyString(this.password()))
 	{
 		Screens.showError(TextUtils.i18n('%MODULENAME%/ERROR_PASSWORD_EMPTY'));
 		return;
 	}
+
 	var oEmailParts = AddressUtils.getEmailParts(this.selectedEmail());
+	this.isCreating(true);
 	Ajax.send(
 		'%ModuleName%',
 		'RegisterMastodonAccount',
@@ -155,6 +165,7 @@ CMastodonSettingsFormView.prototype.createMastodonAccount = function ()
 			'Locale': UserSettings.ShortLanguage
 		},
 		function (oResponse, oRequest) {
+			this.isCreating(false);
 			if (oResponse.Result)
 			{
 				Settings.updateAccount(oRequest.Parameters.Username, oRequest.Parameters.Email);
@@ -201,15 +212,22 @@ CMastodonSettingsFormView.prototype.changeMastodonAccountPassword = function ()
 
 CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
 {
+	if (this.isSuspending())
+	{
+		return;
+	}
+	
 	Popups.showPopup(ConfirmPopup, [TextUtils.i18n('%MODULENAME%/CONFIRM_REMOVE_ACCOUNT'), 
 		_.bind(function (bOk) {
 			if (bOk)
 			{
+				this.isSuspending(true);
 				Ajax.send(
 					'%ModuleName%',
 					'SuspendMastodonAccount',
 					{},
 					function (oResponse, oRequest) {
+						this.isSuspending(false);
 						if (oResponse.Result)
 						{
 							Settings.setAccountSuspended(true);
@@ -231,11 +249,18 @@ CMastodonSettingsFormView.prototype.removeMastodonAccount = function ()
 
 CMastodonSettingsFormView.prototype.unsuspendMastodonAccount = function ()
 {
+	if (this.isUnsuspending())
+	{
+		return;
+	}
+	
+	this.isUnsuspending(true);
 	Ajax.send(
 		'%ModuleName%',
 		'UnsuspendMastodonAccount',
 		{},
 		function (oResponse, oRequest) {
+			this.isUnsuspending(false);
 			if (oResponse.Result)
 			{
 				Settings.setAccountSuspended(false);
