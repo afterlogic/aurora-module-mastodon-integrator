@@ -8,6 +8,9 @@
 				<div class="row hint">
 					<span class="value" data-bind="text: hint"></span>
 				</div>
+				<div class="row hint" data-bind="visible: accountSuspended">
+					<span class="value" data-bind="i18n: {'key': '%MODULENAME%/INFO_SUSPENDED_MASTODON_ACCOUNT'}"></span>
+				</div>
 			</div>
 			<div class="fieldset" data-bind="visible: !accountExists()">
 				<div class="row hint">
@@ -19,7 +22,8 @@
 				</div>
 				<div class="row">
 					<span class="label" data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_EMAIL'}"></span>
-					<select class="input" data-bind="options: emails, value: selectedEmail"></select>
+					<input class="input" data-bind="value: selectedEmail" />
+					<!--<select class="input" data-bind="options: emails, value: selectedEmail"></select>-->
 				</div>
 				<div class="row">
 					<span class="label" data-bind="i18n: {'key': 'COREWEBCLIENT/LABEL_PASSWORD'}"></span>
@@ -36,9 +40,14 @@
 					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_CHANGE_MASTODON_ACCOUNT_PASSWORD'}"></span>
 				</span>
 			</div>-->
-			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists">
+			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists() && !accountSuspended()">
 				<span class="button" data-bind="click: removeMastodonAccount">
 					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_REMOVE_MASTODON_ACCOUNT'}"></span>
+				</span>
+			</div>
+			<div class="buttons" style="text-align: left;" data-bind="visible: accountExists() && accountSuspended()">
+				<span class="button" data-bind="click: unsuspendMastodonAccount">
+					<span data-bind="i18n: {'key': '%MODULENAME%/ACTION_UNSUSPEND_MASTODON_ACCOUNT'}"></span>
 				</span>
 			</div>
 		</div>
