@@ -2,5 +2,25 @@
 	"Disabled": [
 		false,
 		"bool"
+	],
+	"AppName": [
+		"",
+		"string"
+	],
+	"AppInstance": [
+		"",
+		"string"
+	],
+	"ClientKey": [
+		"",
+		"string"
+	],
+	"ClientSecret": [
+		"",
+		"string"
+	],
+	"AccessToken": [
+		"",
+		"string"
 	]
 }
