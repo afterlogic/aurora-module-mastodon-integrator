@@ -32,7 +32,7 @@ CPostPublicLinkPopup.prototype.PopupTemplate = '%ModuleName%_PostPublicLinkPopup
 CPostPublicLinkPopup.prototype.onOpen = function (sPublicLink)
 {
 	this.private(false);
-	this.message('Hi! Look at my file from the link: \n\n' + sPublicLink);
+	this.message(TextUtils.i18n('%MODULENAME%/LABEL_POST_WITH_LINK') + '\n\n' + sPublicLink);
 };
 
 CPostPublicLinkPopup.prototype.publishPost = function ()
