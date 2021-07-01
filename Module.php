@@ -7,6 +7,8 @@
 
 namespace Aurora\Modules\MastodonIntegrator;
 
+use Aurora\Modules\Core\Models\User;
+
 /**
  * Adds ability to work with Mastodon.
  *
@@ -26,16 +28,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 */
 	public function init()
 	{
-		\Aurora\Modules\Core\Classes\User::extend(
-			self::GetName(),
-			[
-				'Username'	=> ['string', ''],
-				'Email'	=> ['string', ''],
-				'Token'	=> ['string', ''],
-				'IdAccount'	=> ['int', 0],
-				'Suspended' => ['bool', false]
-			]
-		);
 		$this->subscribeEvent('CpanelIntegrator::DeleteAliases::after', array($this, 'onAfterDeleteAliases'));
 	}
 
@@ -54,13 +46,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
 	protected function getUserWithMastodonAccount($sEmail)
 	{
-		return (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
-			->where([
-				$this->GetName() . '::Email' => [$sEmail, '=']
-			])
-			->one()
-			->exec();
-
+		return User::firstWhere('Properties->'.$this->GetName() . '::Email', $sEmail);
 	}
 
 	protected function suspendMastodonAccountByUser($oUser)
@@ -79,10 +65,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			else
 			{
-				$oUser->{self::GetName().'::Suspended'} = true;
-				$oUser->saveAttributes([
-					self::GetName().'::Suspended'
-				]);
+				$oUser->setExtendedProp(self::GetName().'::Suspended', true);
+				$oUser->save();
 				$bResult = true;
 			}
 		}
@@ -103,10 +87,8 @@ class Module extends \Aurora\System\Module\AbstractModule
 			}
 			else
 			{
-				$oUser->{self::GetName().'::Suspended'} = false;
-				$oUser->saveAttributes([
-					self::GetName().'::Suspended'
-				]);
+				$oUser->setExtendedProp(self::GetName().'::Suspended', false);
+				$oUser->save();
 				$bResult = true;
 			}
 		}
@@ -217,16 +199,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 			if (isset($aAccountsInfo[0]))
 			{
 				$oUser = \Aurora\System\Api::getAuthenticatedUser();
-				$oUser->{self::GetName().'::Username'} = $Username;
-				$oUser->{self::GetName().'::Email'} = $Email;
-				$oUser->{self::GetName().'::Token'} = $aResult['access_token'];
-				$oUser->{self::GetName().'::IdAccount'} = (int) $aAccountsInfo[0]['id'];
-				$oUser->saveAttributes([
-					self::GetName().'::Username',
-					self::GetName().'::Email',
-					self::GetName().'::Token',
-					self::GetName().'::IdAccount'
-				]);
+				$oUser->setExtendedProp(self::GetName().'::Username', $Username);
+				$oUser->setExtendedProp(self::GetName().'::Email', $Email);
+				$oUser->setExtendedProp(self::GetName().'::Token', $aResult['access_token']);
+				$oUser->setExtendedProp(self::GetName().'::IdAccount', (int) $aAccountsInfo[0]['id']);
+				$oUser->save();
 
 				$mResult = true;
 			}
