@@ -10,19 +10,19 @@ var
 /**
  * @constructor
  */
-function СShareButtonView()
+function CShareButtonView()
 {
 	this.sPublicLink = '';
 }
 
-СShareButtonView.prototype.ViewTemplate = '%ModuleName%_ShareButtonView';
+CShareButtonView.prototype.ViewTemplate = '%ModuleName%_ShareButtonView';
 
-СShareButtonView.prototype.shareViaPmsocial = function ()
+CShareButtonView.prototype.shareViaPmsocial = function ()
 {
 	Popups.showPopup(PostPublicLinkPopup, [this.sPublicLink]);
 };
 
-СShareButtonView.prototype.setPublicLink = function (sPublicLink)
+CShareButtonView.prototype.setPublicLink = function (sPublicLink)
 {
 	var sAppPath = UrlUtils.getAppPath();
 	if (sPublicLink.indexOf(sAppPath) !== -1)
@@ -35,4 +35,4 @@ function СShareButtonView()
 	}
 };
 
-module.exports = new СShareButtonView();
+module.exports = new CShareButtonView();
