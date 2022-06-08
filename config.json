@@ -1,26 +1,50 @@
 {
-	"Disabled": [
-		false,
-		"bool"
-	],
-	"AppName": [
-		"",
-		"string"
-	],
-	"AppInstance": [
-		"",
-		"string"
-	],
-	"ClientKey": [
-		"",
-		"string"
-	],
-	"ClientSecret": [
-		"",
-		"string"
-	],
-	"AccessToken": [
-		"",
-		"string"
-	]
+  "Disabled": [
+    false,
+    "bool"
+  ],
+  "Disabled_Description": [
+    "",
+    "string"
+  ],
+  "AppName": [
+    "",
+    "string"
+  ],
+  "AppName_Description": [
+    "",
+    "string"
+  ],
+  "AppInstance": [
+    "",
+    "string"
+  ],
+  "AppInstance_Description": [
+    "",
+    "string"
+  ],
+  "ClientKey": [
+    "",
+    "string"
+  ],
+  "ClientKey_Description": [
+    "",
+    "string"
+  ],
+  "ClientSecret": [
+    "",
+    "string"
+  ],
+  "ClientSecret_Description": [
+    "",
+    "string"
+  ],
+  "AccessToken": [
+    "",
+    "string"
+  ],
+  "AccessToken_Description": [
+    "",
+    "string"
+  ]
 }
