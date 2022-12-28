@@ -7,6 +7,9 @@
 		"afterlogic/mastodon-api": "^0.1.0"
 
 	},
+	"autoload": {
+		"classmap": ["/"]
+	},
 	"extra": {
 		"installer-name": "MastodonIntegrator"
 	}
