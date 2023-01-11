@@ -151,7 +151,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 	 *
 	 * @throws \Aurora\System\Exceptions\ApiException
 	 */
-	public function UpdateSettings()
+	public function UpdateSettings($ClientKey, $ClientSecret, $AccesToken)
 	{
 		\Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::TenantAdmin);
 
