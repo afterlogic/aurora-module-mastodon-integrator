@@ -110,7 +110,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         \Aurora\System\Api::checkUserRoleIsAtLeast(\Aurora\System\Enums\UserRole::Anonymous);
 
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        if (!empty($oUser) && $oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin) {
+        if ($oUser && $oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin) {
             $aResult = [
                 'ClientKey' => $this->getConfig('ClientKey', ''),
                 'ClientSecret' => $this->getConfig('ClientSecret', ''),
@@ -118,7 +118,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             ];
         }
 
-        if (!empty($oUser) && $oUser->isNormalOrTenant()) {
+        if ($oUser && $oUser->isNormalOrTenant()) {
             if (!empty($oUser->{self::GetName().'::Token'})) {
                 $aResult = [
                     'AccountUsername' => $oUser->{self::GetName().'::Username'},
