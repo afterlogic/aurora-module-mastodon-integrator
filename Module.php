@@ -31,6 +31,15 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->subscribeEvent('CpanelIntegrator::DeleteAliases::after', array($this, 'onAfterDeleteAliases'));
     }
 
+    /**
+     *
+     * @return Module
+     */
+    public static function Decorator()
+    {
+        return parent::Decorator();
+    }
+
     protected function getClient()
     {
         $oAuth = new \Colorfield\Mastodon\MastodonOAuth(
