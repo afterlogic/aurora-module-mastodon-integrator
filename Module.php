@@ -40,6 +40,15 @@ class Module extends \Aurora\System\Module\AbstractModule
         return parent::Decorator();
     }
 
+    /**
+     *
+     * @return Settings
+     */
+    protected function GetModuleSettings()
+    {
+        return $this->oModuleSettings;
+    }
+
     protected function getClient()
     {
         $oAuth = new \Colorfield\Mastodon\MastodonOAuth(
