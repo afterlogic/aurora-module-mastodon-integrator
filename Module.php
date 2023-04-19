@@ -16,6 +16,8 @@ use Aurora\Modules\Core\Models\User;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2023, Afterlogic Corp.
  *
+ * @property Settings $oModuleSettings
+ *
  * @package Modules
  */
 class Module extends \Aurora\System\Module\AbstractModule
@@ -52,12 +54,12 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected function getClient()
     {
         $oAuth = new \Colorfield\Mastodon\MastodonOAuth(
-            $this->getConfig('AppName'),
-            $this->getConfig('AppInstance')
+            $this->oModuleSettings->AppName,
+            $this->oModuleSettings->AppInstance
         );
-        $oAuth->config->setClientId($this->getConfig('ClientKey'));
-        $oAuth->config->setClientSecret($this->getConfig('ClientSecret'));
-        $oAuth->config->setBearer($this->getConfig('AccessToken'));
+        $oAuth->config->setClientId($this->oModuleSettings->ClientKey);
+        $oAuth->config->setClientSecret($this->oModuleSettings->ClientSecret);
+        $oAuth->config->setBearer($this->oModuleSettings->AccessToken);
 
         return new \Colorfield\Mastodon\MastodonAPI($oAuth->config);
     }
@@ -130,9 +132,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
         if ($oUser && $oUser->Role === \Aurora\System\Enums\UserRole::SuperAdmin) {
             $aResult = [
-                'ClientKey' => $this->getConfig('ClientKey', ''),
-                'ClientSecret' => $this->getConfig('ClientSecret', ''),
-                'AccessToken' => $this->getConfig('AccesToken', '')
+                'ClientKey' => $this->oModuleSettings->ClientKey,
+                'ClientSecret' => $this->oModuleSettings->ClientSecret,
+                'AccessToken' => $this->oModuleSettings->AccessToken
             ];
         }
 
@@ -242,12 +244,12 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function LoginToMastodonAccount($Username, $Password)
     {
         $oAuth = new \Colorfield\Mastodon\MastodonOAuth(
-            $this->getConfig('AppName'),
-            $this->getConfig('AppInstance')
+            $this->oModuleSettings->AppName,
+            $this->oModuleSettings->AppInstance
         );
-        $oAuth->config->setClientId($this->getConfig('ClientKey'));
-        $oAuth->config->setClientSecret($this->getConfig('ClientSecret'));
-        $oAuth->config->setBearer($this->getConfig('AccessToken'));
+        $oAuth->config->setClientId($this->oModuleSettings->ClientKey);
+        $oAuth->config->setClientSecret($this->oModuleSettings->ClientSecret);
+        $oAuth->config->setBearer($this->oModuleSettings->AccessToken);
         $oAuth->config->setScopes(['read', 'write', 'follow']);
 
         return $oAuth->getAuthorizationUrl();
