@@ -72,22 +72,22 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function getUserWithMastodonAccount($sEmail)
     {
-        return User::firstWhere('Properties->'.$this->GetName() . '::Email', $sEmail);
+        return User::firstWhere('Properties->' . $this->GetName() . '::Email', $sEmail);
     }
 
     protected function suspendMastodonAccountByUser($oUser)
     {
         $bResult = false;
-        if (null !== $oUser->getExtendedProp(self::GetName().'::IdAccount')) {
+        if (null !== $oUser->getExtendedProp(self::GetName() . '::IdAccount')) {
             $oClient = $this->getClient();
-            $aResult = $oClient->getResponse('/admin/accounts/' . $oUser->getExtendedProp(self::GetName().'::IdAccount') . '/action', 'post', [
+            $aResult = $oClient->getResponse('/admin/accounts/' . $oUser->getExtendedProp(self::GetName() . '::IdAccount') . '/action', 'post', [
                 'type' => 'suspend'
             ]);
 
             if (isset($aResult['error'])) {
                 throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
             } else {
-                $oUser->setExtendedProp(self::GetName().'::Suspended', true);
+                $oUser->setExtendedProp(self::GetName() . '::Suspended', true);
                 $oUser->save();
                 $bResult = true;
             }
@@ -98,14 +98,14 @@ class Module extends \Aurora\System\Module\AbstractModule
     protected function unsuspendMastodonAccountByUser($oUser)
     {
         $bResult = false;
-        if (null !== $oUser->getExtendedProp(self::GetName().'::IdAccount')) {
+        if (null !== $oUser->getExtendedProp(self::GetName() . '::IdAccount')) {
             $oClient = $this->getClient();
-            $aResult = $oClient->getResponse('/admin/accounts/' . $oUser->getExtendedProp(self::GetName().'::IdAccount') . '/unsuspend', 'post', []);
+            $aResult = $oClient->getResponse('/admin/accounts/' . $oUser->getExtendedProp(self::GetName() . '::IdAccount') . '/unsuspend', 'post', []);
 
             if (isset($aResult['error'])) {
                 throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
             } else {
-                $oUser->setExtendedProp(self::GetName().'::Suspended', false);
+                $oUser->setExtendedProp(self::GetName() . '::Suspended', false);
                 $oUser->save();
                 $bResult = true;
             }
@@ -145,11 +145,11 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         if ($oUser && $oUser->isNormalOrTenant()) {
-            if (!empty($oUser->getExtendedProp(self::GetName().'::Token'))) {
+            if (!empty($oUser->getExtendedProp(self::GetName() . '::Token'))) {
                 $aResult = [
-                    'AccountUsername' => $oUser->getExtendedProp(self::GetName().'::Username'),
-                    'AccountEmail' => $oUser->getExtendedProp(self::GetName().'::Email'),
-                    'AccountSuspended' => $oUser->getExtendedProp(self::GetName().'::Suspended'),
+                    'AccountUsername' => $oUser->getExtendedProp(self::GetName() . '::Username'),
+                    'AccountEmail' => $oUser->getExtendedProp(self::GetName() . '::Email'),
+                    'AccountSuspended' => $oUser->getExtendedProp(self::GetName() . '::Suspended'),
                     'AccountConfirmed' => $this->IsMastodonAccountConfirmed()
                 ];
             }
@@ -204,10 +204,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             );
             if (isset($aAccountsInfo[0])) {
                 $oUser = \Aurora\System\Api::getAuthenticatedUser();
-                $oUser->setExtendedProp(self::GetName().'::Username', $Username);
-                $oUser->setExtendedProp(self::GetName().'::Email', $Email);
-                $oUser->setExtendedProp(self::GetName().'::Token', $aResult['access_token']);
-                $oUser->setExtendedProp(self::GetName().'::IdAccount', (int) $aAccountsInfo[0]['id']);
+                $oUser->setExtendedProp(self::GetName() . '::Username', $Username);
+                $oUser->setExtendedProp(self::GetName() . '::Email', $Email);
+                $oUser->setExtendedProp(self::GetName() . '::Token', $aResult['access_token']);
+                $oUser->setExtendedProp(self::GetName() . '::IdAccount', (int) $aAccountsInfo[0]['id']);
                 $oUser->save();
 
                 $mResult = true;
@@ -236,7 +236,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $mResult = false;
         $oClient = $this->getClient();
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        $aResult = $oClient->getResponse('/admin/accounts/' . $oUser->getExtendedProp(self::GetName().'::IdAccount'), 'get', []);
+        $aResult = $oClient->getResponse('/admin/accounts/' . $oUser->getExtendedProp(self::GetName() . '::IdAccount'), 'get', []);
 
         if (isset($aResult['error'])) {
             throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
@@ -264,8 +264,8 @@ class Module extends \Aurora\System\Module\AbstractModule
     public function ChangeMastodonAccountPassword($NewPassword)
     {
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        if (null !== $oUser->getExtendedProp(self::GetName().'::IdAccount')) {
-            return $this->LoginToMastodonAccount($oUser->getExtendedProp(self::GetName().'::Username'), $NewPassword);
+        if (null !== $oUser->getExtendedProp(self::GetName() . '::IdAccount')) {
+            return $this->LoginToMastodonAccount($oUser->getExtendedProp(self::GetName() . '::Username'), $NewPassword);
         }
     }
 
@@ -273,7 +273,7 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         $mResult = false;
         $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        if (null !== $oUser->getExtendedProp(self::GetName().'::IdAccount')) {
+        if (null !== $oUser->getExtendedProp(self::GetName() . '::IdAccount')) {
             $oClient = $this->getClient();
             $options = [
                 'status' => $Message,
@@ -281,7 +281,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             if ($Direct) {
                 $options['visibility'] = 'direct';
             }
-            $aResult = $oClient->getResponse('/statuses', 'post', $options, $oUser->getExtendedProp(self::GetName().'::Token'));
+            $aResult = $oClient->getResponse('/statuses', 'post', $options, $oUser->getExtendedProp(self::GetName() . '::Token'));
             if (isset($aResult['error'])) {
                 throw new \Aurora\System\Exceptions\ApiException(0, null, $aResult['error']);
             } else {
